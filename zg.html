@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>次比</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+            background-color: #0f0e1a;
+        }
+
+        #scroll-viewport {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background-color: #0f0e1a;
+        }
+        #scroll-content {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .scroll-item {
+            position: absolute;
+            left: 0;
+            white-space: nowrap;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            text-shadow: 0 0 30px rgba(255, 215, 150, 0.10);
+            user-select: none;
+            pointer-events: none;
+            will-change: transform;
+        }
+
+        #credit-tip {
+            position: fixed;
+            bottom: 30px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.12);
+            font-size: 13px;
+            letter-spacing: 0.15em;
+            pointer-events: none;
+            user-select: none;
+            z-index: 10;
+            font-weight: 300;
+        }
+
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+        #scroll-viewport {
+            animation: fadeIn 0.8s ease-out;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="scroll-viewport">
+        <div id="scroll-content"></div>
+    </div>
+<audio autoplay loop style="display:none;" id="audioPlayer">
+    <source src="res/zg.mp3" type="audio/mpeg">
+</audio>
+
+    <script>
+        const audioPlayer = document.getElementById('audioPlayer');
+
+        const CONFIG = {
+            texts: [
+                // '次比',
+                // '出生 枪贝 无租 次比',
+                // '认么',
+                // '我悄悄地告诉你',
+                // '你是个次比',
+                // '次比',
+                // '出生 枪贝 无租 次比',
+                // '认么',
+                // '出生 枪贝 无租 次比',
+                // '我悄悄地告诉你',
+                // '你是个次比'
+                '和府',
+                '和府捞面',
+                '为什么在平潭不表白',
+                '扛火车',
+                '有没有什么推荐的春游去处',
+                '抱一下吧',
+                '我也想一起去坐轮渡捏',
+                '平潭1V4',
+                '有没有什么推荐的春游去处',
+                '和府捞面',
+                'GPT也是这么说的',
+                '抱一下吧',
+                '我发现我是爱坐火车',
+                'hxd',
+                '扛火车',
+                '有没有什么推荐的春游去处',
+                'GPT也是这么说的',
+                'keke keke',
+                'GPT也是这么说的',
+                '抱一下吧',
+                '和府捞面',
+                '玩桌游',
+                'GPT也是这么说的',
+                '抱一下吧',
+                'zay',
+                '扛火车',
+                'GPT也是这么说的',
+                '最后一次切割'
+            ],
+
+            // ---------- 滚动速度基础值 ----------
+            // 每个字符串的实际速度 = speedBase * (0.5 + Math.random() * 1.0)
+            // 范围: speedBase*0.5 ~ speedBase*1.5 (像素/帧)
+            speedBase: 4.8,
+
+            fontSize: '2.6rem',
+            color: '#f0e6d0',
+            backgroundColor: '#0f0e1a',
+            fontWeight: 600,
+            textShadow: '0 0 40px rgba(255, 215, 150, 0.12)',
+            loop: true,
+            randomSpeedOnReset: true,
+            verticalRandomness: 0.08
+        };
+
+        const viewport = document.getElementById('scroll-viewport');
+        const content = document.getElementById('scroll-content');
+
+        viewport.style.backgroundColor = CONFIG.backgroundColor;
+        document.body.style.backgroundColor = CONFIG.backgroundColor;
+
+        let items = [];
+        let viewportWidth = window.innerWidth;
+        let viewportHeight = window.innerHeight;
+        let isAnimating = true;
+        let animationId = null;
+
+        function random(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+
+        function createItems() {
+            content.innerHTML = '';
+            items = [];
+
+            const total = CONFIG.texts.length;
+            if (total === 0) return;
+
+            const temp = document.createElement('div');
+            temp.style.fontSize = CONFIG.fontSize;
+            temp.style.position = 'absolute';
+            temp.style.visibility = 'hidden';
+            temp.textContent = '测';
+            document.body.appendChild(temp);
+            const fontSizePx = temp.offsetHeight;
+            document.body.removeChild(temp);
+
+            const topMargin = 10;
+            const bottomMargin = 10;
+            const availableHeight = viewportHeight - topMargin - bottomMargin - fontSizePx;
+
+            CONFIG.texts.forEach((text, index) => {
+                const el = document.createElement('div');
+                el.className = 'scroll-item';
+                el.textContent = text;
+                el.style.fontSize = CONFIG.fontSize;
+                el.style.color = CONFIG.color;
+                el.style.fontWeight = CONFIG.fontWeight;
+                el.style.textShadow = CONFIG.textShadow;
+
+                content.appendChild(el);
+
+                const width = el.offsetWidth;
+                const speedFactor = 0.5 + Math.random() * 1.0;
+                const speed = CONFIG.speedBase * speedFactor;
+                const offset = Math.random() * 600;
+                const initialX = viewportWidth + offset;
+
+                let y;
+                if (total === 1) {
+                    y = viewportHeight / 2 - fontSizePx / 2;
+                } else {
+                    const t = index / (total - 1);
+                    const noise = random(-CONFIG.verticalRandomness, CONFIG.verticalRandomness);
+                    let yRatio = Math.min(1, Math.max(0, t + noise));
+                    y = topMargin + yRatio * availableHeight;
+                }
+                y = Math.min(viewportHeight - fontSizePx - bottomMargin, Math.max(topMargin, y));
+
+                el.style.top = y + 'px';
+                el.style.transform = `translateX(${initialX}px)`;
+
+                items.push({
+                    el: el,
+                    width: width,
+                    x: initialX,
+                    speed: speed,
+                    baseSpeed: speed,
+                });
+            });
+        }
+
+        function resetItem(item) {
+            const offset = Math.random() * 600;
+            item.x = viewportWidth + offset;
+            if (CONFIG.randomSpeedOnReset) {
+                const speedFactor = 0.5 + Math.random() * 1.0;
+                item.speed = CONFIG.speedBase * speedFactor;
+            }
+            item.el.style.transform = `translateX(${item.x}px)`;
+        }
+
+        function update() {
+            if (!isAnimating) return;
+
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+                item.x -= item.speed;
+
+                if (item.x < -item.width) {
+                    if (CONFIG.loop) {
+                        resetItem(item);
+                    } else {
+                        item.x = -item.width;
+                        item.speed = 0;
+                    }
+                }
+
+                item.el.style.transform = `translateX(${item.x}px)`;
+            }
+
+            animationId = requestAnimationFrame(update);
+        }
+        function reinit() {
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+            viewportWidth = window.innerWidth;
+            viewportHeight = window.innerHeight;
+            createItems();
+            if (CONFIG.loop || items.some(item => item.x > -item.width)) {
+                isAnimating = true;
+                if (!animationId) {
+                    animationId = requestAnimationFrame(update);
+                }
+            }
+        }
+
+        function start() {
+            viewportWidth = window.innerWidth;
+            viewportHeight = window.innerHeight;
+            createItems();
+            isAnimating = true;
+            if (animationId) cancelAnimationFrame(animationId);
+            animationId = requestAnimationFrame(update);
+            audioPlayer.play();
+        }
+
+        let resizeTimeout = null;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                reinit();
+            }, 250);
+        });
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                isAnimating = false;
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                    animationId = null;
+                }
+            } else {
+                if (CONFIG.loop || items.some(item => item.x > -item.width)) {
+                    isAnimating = true;
+                    if (!animationId) {
+                        animationId = requestAnimationFrame(update);
+                    }
+                }
+            }
+        });
+
+        // if (document.readyState === 'complete') {
+        //     start();
+        // } else {
+        //     window.addEventListener('load', start);
+        // }
+        document.addEventListener('click', () => {
+            start();
+        });
+
+        window.__scrollControl = {
+            config: CONFIG,
+            pause: () => {
+                isAnimating = false;
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                    animationId = null;
+                }
+            },
+            resume: () => {
+                if (CONFIG.loop || items.some(item => item.x > -item.width)) {
+                    isAnimating = true;
+                    if (!animationId) {
+                        animationId = requestAnimationFrame(update);
+                    }
+                }
+            },
+            restart: reinit,
+            getStatus: () => ({
+                isAnimating,
+                itemCount: items.length,
+                viewportWidth,
+                viewportHeight,
+                items: items.map(item => ({
+                    text: item.el.textContent,
+                    x: item.x,
+                    speed: item.speed,
+                    width: item.width,
+                    top: parseFloat(item.el.style.top)
+                }))
+            })
+        };
+    </script>
+</body>
+</html>

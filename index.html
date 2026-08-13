@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>加载页面</title>
+  </head>
+  <body>
+    <script>
+      (function () {
+        // 1. 解析 URL 参数 frdName
+        const params = new URLSearchParams(window.location.search);
+        const frdName = params.get("frdName")?.trim();
+
+        // 2. 无参数时显示提示
+        if (!frdName) {
+          document.body.innerHTML =
+            '<div class="tip">请在 URL 中添加 ?frdName=名称 参数</div>';
+          return;
+        }
+
+        // 3. 安全校验（防止路径遍历等）
+        function isValid(name) {
+          // 只允许字母、数字、中文、下划线、连字符、点（不能以点开头）
+          if (!name || name.length > 80) return false;
+          if (name.startsWith(".")) return false;
+          if (/\.\.|\\|\/|~/.test(name)) return false;
+          return /^[\u4e00-\u9fa5a-zA-Z0-9_\-\.]+$/.test(name);
+        }
+
+        if (!isValid(frdName)) {
+          document.body.innerHTML =
+            '<div class="tip">⚠️ 参数不合法，请检查</div>';
+          return;
+        }
+        if (frdName == "zg") {
+        window.location.href = "./zg.html";
+        } else if (frdName == "cibi") {
+            window.location.href = "./cibi.html";
+        } else if (frdName == "hf") {
+          window.location.href = "./hflm.html";
+        }
+      })();
+    </script>
+  </body>
+</html>
