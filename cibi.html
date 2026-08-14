@@ -81,7 +81,7 @@
         <div id="scroll-content"></div>
     </div>
 <audio autoplay loop style="display:none;">
-  <source src="res/cibi.aac" type="audio/mpeg">
+  <source src="res/cibi.m4a" type="audio/mpeg">
 </audio>
 
     <script>
@@ -246,6 +246,7 @@
             isAnimating = true;
             if (animationId) cancelAnimationFrame(animationId);
             animationId = requestAnimationFrame(update);
+            audioPlayer.play();
         }
 
         let resizeTimeout = null;
@@ -273,11 +274,14 @@
             }
         });
 
-        if (document.readyState === 'complete') {
+        // if (document.readyState === 'complete') {
+        //     start();
+        // } else {
+        //     window.addEventListener('load', start);
+        // }
+        document.addEventListener('click', () => {
             start();
-        } else {
-            window.addEventListener('load', start);
-        }
+        },{once:true});
 
         window.__scrollControl = {
             config: CONFIG,
