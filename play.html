@@ -533,8 +533,18 @@
             let isDraggingProgress = false;
 
             // ============ 默认路径配置 ============
-            const DEFAULT_AUDIO_PATH = 'res/diuHaai/dh.mp3';
-            const DEFAULT_LRC_PATH = 'res/diuHaai/dh.lrc';
+            const DEFAULT_AUDIO_PATH = 'res/cibi.m4a';
+            const DEFAULT_LRC_PATH= 'res/diuHaai/dh.lrc';
+            const params = new URLSearchParams(window.location.search);
+            const frdName = params.get("res")?.trim();
+
+            let targetAduioPath = DEFAULT_AUDIO_PATH;
+            let targetLrcPath =DEFAULT_LRC_PATH;
+            
+            if (frdName == "dh") {
+                targetAduioPath = 'res/diuHaai/dh.mp3';
+                targetLrcPath = 'res/diuHaai/dh.lrc';
+            }
 
             // ============ Toast 消息 ============
             function showToast(message, isWarning = false) {
@@ -1108,9 +1118,9 @@
                 // 尝试加载默认音频
                 // let audioLoaded = false;
                 // try {
-                //     const response = await fetch(DEFAULT_AUDIO_PATH, { method: 'HEAD' });
+                //     const response = await fetch(targetAduioPath, { method: 'HEAD' });
                 //     if (response.ok) {
-                //         loadAudioFile(DEFAULT_AUDIO_PATH, DEFAULT_AUDIO_PATH.split('/').pop());
+                //         loadAudioFile(targetAduioPath, targetAduioPath.split('/').pop());
                 //         audioLoaded = true;
                 //     }
                 // } catch (e) {
@@ -1121,12 +1131,12 @@
                 // // 如果fetch HEAD失败，仍然尝试设置src（本地文件可能通过相对路径加载）
                 // if (!audioLoaded) {
                     // 直接尝试加载
-                    loadAudioFile(DEFAULT_AUDIO_PATH, DEFAULT_AUDIO_PATH.split('/').pop());
+                    loadAudioFile(targetAduioPath, targetAduioPath.split('/').pop());
                 // }
 
                 // 尝试加载默认LRC
                 try {
-                    const response = await fetch(DEFAULT_LRC_PATH);
+                    const response = await fetch(targetLrcPath);
                     if (response.ok) {
                         const text = await response.text();
                         const parsed = parseLRC(text);
@@ -1184,8 +1194,8 @@
             console.log('   - 点击歌词行：跳转到对应时间');
             console.log('   - 拖放音频/LRC文件到播放器：自动加载');
             console.log('   - window.musicPlayer 可访问播放器API');
-            console.log('   默认音频路径:', DEFAULT_AUDIO_PATH);
-            console.log('   默认歌词路径:', DEFAULT_LRC_PATH);
+            console.log('   默认音频路径:', targetAduioPath);
+            console.log('   默认歌词路径:', targetLrcPath);
         })();
     </script>
 </body>

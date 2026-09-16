@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>今天你是</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { height: 100%; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(18px, 4vh, 42px);
+    padding: 24px 12px;
+    background: radial-gradient(circle at 50% 8%, #33415f 0%, #171d2d 55%, #0b0e15 100%);
+    font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+    color: #fff;
+    overflow-x: hidden;
+  }
+
+  /* ================= 转盘 ================= */
+  .wheel-wrap {
+    position: relative;
+    width: min(560px, 86vw, 62vh);
+    aspect-ratio: 1 / 1;
+    flex: none;
+  }
+
+  .wheel {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 40%, #fffaf0 0%, #fdeec9 45%, #f4d99d 78%, #e0ba6c 100%);
+    box-shadow:
+      0 0 0 8px rgba(255, 255, 255, 0.06),
+      0 0 0 20px rgba(255, 255, 255, 0.035),
+      0 22px 55px rgba(0, 0, 0, 0.55),
+      inset 0 0 70px rgba(186, 146, 76, 0.35);
+    will-change: transform;
+    transform: rotate(0deg);
+  }
+
+  .wheel::after {
+    content: "";
+    position: absolute;
+    inset: 4%;
+    border-radius: 50%;
+    border: 2px dashed rgba(178, 138, 66, 0.32);
+    pointer-events: none;
+  }
+
+  .center-label {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 27%;
+    height: 27%;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 4px;
+    font-size: clamp(13px, 3.6vmin, 22px);
+    font-weight: 800;
+    letter-spacing: 3px;
+    text-indent: 3px;
+    color: #fff;
+    background: linear-gradient(150deg, #ff8b7a, #e8325a 60%, #c31d47);
+    box-shadow:
+      0 10px 26px rgba(227, 45, 90, 0.45),
+      inset 0 -5px 12px rgba(0, 0, 0, 0.2),
+      inset 0 5px 12px rgba(255, 255, 255, 0.35);
+    z-index: 15;
+    pointer-events: none;
+  }
+
+  /* 顶部指针 */
+  .pointer {
+    position: absolute;
+    left: 50%;
+    top: -12px;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 13px solid transparent;
+    border-right: 13px solid transparent;
+    border-top: 26px solid #ff4d6d;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.55));
+    z-index: 20;
+    pointer-events: none;
+  }
+
+  /* ================= 便利贴 ================= */
+  .note {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 8px;
+    border-radius: 7px;
+    text-align: center;
+    color: #43331a;
+    overflow: hidden;
+    box-shadow:
+      0 5px 12px rgba(0, 0, 0, 0.22),
+      inset 0 -8px 14px rgba(0, 0, 0, 0.06);
+    user-select: none;
+  }
+
+  .note::before {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; top: 0;
+    height: 40%;
+    background: linear-gradient(rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0));
+    pointer-events: none;
+  }
+
+  .note-title {
+    font-weight: 800;
+    line-height: 1.15;
+    max-width: 100%;
+    word-break: break-word;
+  }
+
+  .note-text {
+    font-size: 0.78em;
+    line-height: 1.25;
+    opacity: 0.78;
+    max-width: 100%;
+    word-break: break-word;
+  }
+
+  /* ================= 按钮 ================= */
+  .start-btn {
+    padding: 14px 62px;
+    border: none;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: clamp(17px, 2.4vmin, 21px);
+    font-weight: 800;
+    letter-spacing: 6px;
+    text-indent: 6px;
+    color: #fff;
+    cursor: pointer;
+    background: linear-gradient(135deg, #ff8a5b, #ff3d6e);
+    box-shadow: 0 10px 26px rgba(255, 61, 110, 0.45), inset 0 -3px 0 rgba(0, 0, 0, 0.15);
+    transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  }
+  .start-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 15px 32px rgba(255, 61, 110, 0.55), inset 0 -3px 0 rgba(0, 0, 0, 0.15);
+  }
+  .start-btn:active:not(:disabled) {
+    transform: translateY(1px) scale(0.98);
+  }
+  .start-btn:disabled {
+    filter: grayscale(0.55) brightness(0.82);
+    cursor: not-allowed;
+  }
+
+  /* ================= 结果放大层 ================= */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    padding: 24px;
+    background: rgba(8, 10, 18, 0.74);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease;
+  }
+  .overlay.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .big-note {
+    position: relative;
+    width: min(380px, 76vw);
+    aspect-ratio: 1 / 1;
+    border-radius: 16px;
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    text-align: center;
+    color: #43331a;
+    overflow: hidden;
+    box-shadow:
+      0 30px 70px rgba(0, 0, 0, 0.6),
+      inset 0 -12px 24px rgba(0, 0, 0, 0.07);
+    transform: scale(0.15) rotate(-14deg);
+    opacity: 0;
+    transition: transform 0.55s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+  }
+  .big-note::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0) 58%);
+    pointer-events: none;
+  }
+  .big-note > * {
+    position: relative;
+    z-index: 1;
+  }
+  .overlay.show .big-note {
+    transform: scale(1) rotate(-3deg);
+    opacity: 1;
+  }
+
+  .big-note h3 {
+    margin: 0;
+    font-size: clamp(26px, 6.4vw, 40px);
+    font-weight: 800;
+    letter-spacing: 2px;
+  }
+  .big-note p {
+    margin: 0;
+    font-size: clamp(14px, 3.4vw, 19px);
+    line-height: 1.55;
+    opacity: 0.82;
+  }
+
+  .overlay-hint {
+    font-size: 13px;
+    letter-spacing: 2px;
+    color: rgba(255, 255, 255, 0.55);
+  }
+</style>
+</head>
+<body>
+
+  <div class="wheel-wrap">
+    <div class="wheel" id="wheel"></div>
+    <div class="center-label">今天你是</div>
+    <div class="pointer"></div>
+  </div>
+
+  <button class="start-btn" id="startBtn">开 始</button>
+
+  <div class="overlay" id="overlay">
+    <div class="big-note" id="bigNote">
+      <h3 id="bigTitle"></h3>
+      <p id="bigText"></p>
+    </div>
+    <div class="overlay-hint">点击任意处关闭</div>
+  </div>
+
+<script>
+
+const NOTES = [
+  { title: "卓哥", text: "自己自觉去买票" },
+  { title: "顶宝", text: "check" },
+  { title: "Eason", text: "看看还在不在" },
+  { title: "阿珍", text: "学不来" },
+  { title: "游游", text: "来一发吧" },
+  { title: "源哥", text: "该干活了" },
+  { title: "熙熙", text: "带刀侍卫" },
+  { title: "叶姐", text: "今天做万人迷" },
+  { title: "学成", text: "给卓哥小赚50万" },
+  { title: "好兄弟", text: "小心坐火车来的" }
+];
+
+const COLORS = [
+  "#ffd93d", "#ffb3c1", "#8ecae6", "#b8e986",
+  "#ffc078", "#c9b6ff", "#7fe0d0", "#ffa07a"
+];
+
+const wrap      = document.querySelector(".wheel-wrap");
+const wheel     = document.getElementById("wheel");
+const startBtn  = document.getElementById("startBtn");
+const overlay   = document.getElementById("overlay");
+const bigNote   = document.getElementById("bigNote");
+const bigTitle  = document.getElementById("bigTitle");
+const bigText   = document.getElementById("bigText");
+
+const COUNT = NOTES.length;
+
+let noteEls   = [];   // 便利贴 DOM
+let rotation  = 0;    // 转盘累计角度（度）
+let spinning  = false;
+let lastIndex = -1;   // 上一次的结果，避免连续重复
+
+function buildWheel() {
+  const size     = wrap.clientWidth || 560;
+  const noteSize = size * 0.185;                          // 便利贴边长
+  const radius   = size / 2 - noteSize / 2 - size * 0.022; // 便利贴中心到圆心的距离
+  const fontSize = noteSize * 0.16;
+
+  wheel.innerHTML = "";
+  noteEls = [];
+
+  NOTES.forEach((note, i) => {
+    const angle = (360 / COUNT) * i;   // 0° 在正上方，顺时针排列
+    const el = document.createElement("div");
+    el.className = "note";
+    el.style.width  = el.style.height = noteSize + "px";
+    el.style.marginLeft = el.style.marginTop = (-noteSize / 2) + "px";
+    el.style.fontSize = fontSize + "px";
+    el.style.background = COLORS[i % COLORS.length];
+    // 先旋转到该角度，再沿该方向向外平移
+    el.style.transform = `rotate(${angle}deg) translateY(${-radius}px)`;
+    el.innerHTML =
+      `<div class="note-title">${note.title}</div>` +
+    //   `<div class="note-text">${note.text}</div>`;
+      `<div class="note-text">XXXXXXXXXXXXXX</div>`;
+
+    wheel.appendChild(el);
+    noteEls.push(el);
+  });
+
+  wheel.style.transition = "none";
+  wheel.style.transform  = `rotate(${rotation}deg)`;
+  void wheel.offsetWidth; // 强制回流，让浏览器记录该状态
+}
+
+function spin() {
+  if (spinning) return;
+  spinning = true;
+  startBtn.disabled = true;
+  overlay.classList.remove("show");
+
+  // 随机选一个结果
+  let idx = Math.floor(Math.random() * COUNT);
+  if (COUNT > 1) {
+    while (idx === lastIndex) idx = Math.floor(Math.random() * COUNT);
+  }
+  lastIndex = idx;
+
+  const step = 360 / COUNT;
+
+  // 让第 idx 张便利贴停在正上方（角度 0）
+  const targetMod  = (((-idx * step) % 360) + 360) % 360;
+  const currentMod = ((rotation % 360) + 360) % 360;
+  let delta = targetMod - currentMod;
+  if (delta < 0) delta += 360;
+
+  const turns = 5 + Math.floor(Math.random() * 3); // 多转 5~7 圈
+  rotation += turns * 360 + delta;
+
+  wheel.style.transition = "transform 4.6s cubic-bezier(0.15, 0.82, 0.1, 1)";
+  wheel.style.transform  = `rotate(${rotation}deg)`;
+
+  let done = false;
+  let fallback;
+
+  const finish = () => {
+    if (done) return;
+    done = true;
+    clearTimeout(fallback);
+    wheel.removeEventListener("transitionend", onEnd);
+    spinning = false;
+    startBtn.disabled = false;
+    showResult(idx);
+  };
+
+  const onEnd = (e) => {
+    if (e.target === wheel && e.propertyName === "transform") finish();
+  };
+
+  wheel.addEventListener("transitionend", onEnd);
+  fallback = setTimeout(finish, 4900); // 兜底
+}
+
+function showResult(idx) {
+  const note = NOTES[idx];
+  bigNote.style.background = COLORS[idx % COLORS.length];
+  bigTitle.textContent = note.title;
+  bigText.textContent  = note.text;
+  overlay.classList.add("show");
+}
+
+startBtn.addEventListener("click", spin);
+overlay.addEventListener("click", () => overlay.classList.remove("show"));
+
+let resizeTimer;
+window.addEventListener("resize", () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    if (!spinning) buildWheel();
+  }, 200);
+});
+
+/* 初始化 */
+buildWheel();
+</script>
+</body>
+</html>
