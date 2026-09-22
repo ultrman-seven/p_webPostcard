@@ -640,8 +640,9 @@
                     const last = deduped[deduped.length - 1];
                     if (last && Math.abs(last.time - item.time) < 0.01) {
                         // 同一时间点，合并文本
-                        if (item.text && last.text !== item.text) {
-                            last.text = last.text + ' | ' + item.text;
+                        // if (item.text && last.text !== item.text) {
+                        if (item.text) {
+                            last.text = last.text + '\n' + item.text;
                         }
                     } else {
                         deduped.push({ ...item });

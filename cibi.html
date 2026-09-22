@@ -19,7 +19,32 @@
             font-family: 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
             background-color: #0f0e1a;
         }
-
+  .hint {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 27%;
+    height: 27%;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 4px;
+    font-size: clamp(13px, 3.6vmin, 22px);
+    font-weight: 800;
+    letter-spacing: 3px;
+    text-indent: 3px;
+    color: #fff;
+    background: linear-gradient(150deg, #ff8b7a, #e8325a 60%, #c31d47);
+    box-shadow:
+      0 10px 26px rgba(227, 45, 90, 0.45),
+      inset 0 -5px 12px rgba(0, 0, 0, 0.2),
+      inset 0 5px 12px rgba(255, 255, 255, 0.35);
+    z-index: 15;
+    pointer-events: none;
+  }
         #scroll-viewport {
             position: fixed;
             top: 0;
@@ -76,7 +101,7 @@
     </style>
 </head>
 <body>
-
+    <div class="hint" id="hint"> 点击屏幕 </div>
     <div id="scroll-viewport">
         <div id="scroll-content"></div>
     </div>
@@ -120,6 +145,7 @@
 
         const viewport = document.getElementById('scroll-viewport');
         const content = document.getElementById('scroll-content');
+        const hint = document.getElementById('hint');
 
         viewport.style.backgroundColor = CONFIG.backgroundColor;
         document.body.style.backgroundColor = CONFIG.backgroundColor;
@@ -283,6 +309,7 @@
         //     window.addEventListener('load', start);
         // }
         document.addEventListener('click', () => {
+            hint.style.display = 'none';
             start();
         },{once:true});
 
